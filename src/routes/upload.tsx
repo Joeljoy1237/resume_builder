@@ -86,6 +86,7 @@ function UploadPage() {
       toast.success("Resume imported. Review and refine.");
       navigate({ to: "/builder" });
     } catch (e) {
+      console.error("[upload] failed:", e);
       toast.error(e instanceof Error ? e.message : "Upload failed");
       setPhase("idle");
     }
