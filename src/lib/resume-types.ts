@@ -2,7 +2,15 @@ export type TemplateId =
   | "professional"
   | "minimalist"
   | "engineer"
-  | "executive";
+  | "executive"
+  | "academic"
+  | "consultant"
+  | "graduate"
+  | "compact"
+  | "technical-lead"
+  | "sales"
+  | "creative-clean"
+  | "federal";
 
 export interface Experience {
   id: string;
