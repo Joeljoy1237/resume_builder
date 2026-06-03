@@ -2,7 +2,15 @@ export type TemplateId =
   | "professional"
   | "minimalist"
   | "engineer"
-  | "executive";
+  | "executive"
+  | "academic"
+  | "consultant"
+  | "graduate"
+  | "compact"
+  | "technical-lead"
+  | "sales"
+  | "creative-clean"
+  | "federal";
 
 export interface Experience {
   id: string;
@@ -77,4 +85,12 @@ export const TEMPLATES: { id: TemplateId; name: string; ats: number; description
   { id: "minimalist", name: "Modern Minimalist", ats: 96, description: "Generous whitespace, refined typography." },
   { id: "engineer", name: "Software Engineer", ats: 97, description: "Projects + tech-forward, dense and scannable." },
   { id: "executive", name: "Executive", ats: 95, description: "Leadership-first with achievement highlights." },
+  { id: "academic", name: "Academic / CV", ats: 96, description: "Education-led for researchers and faculty." },
+  { id: "consultant", name: "Management Consultant", ats: 97, description: "Impact-driven bullets, MBB-style structure." },
+  { id: "graduate", name: "New Graduate", ats: 98, description: "Entry-level with education and projects up top." },
+  { id: "compact", name: "Compact One-Page", ats: 96, description: "Tight spacing to fit a dense career on one page." },
+  { id: "technical-lead", name: "Technical Lead", ats: 97, description: "Skills matrix prominent, leadership context." },
+  { id: "sales", name: "Sales & Revenue", ats: 96, description: "Quota and revenue metrics emphasized." },
+  { id: "creative-clean", name: "Creative Clean", ats: 94, description: "Subtle accent rule, still fully parseable." },
+  { id: "federal", name: "Federal / Government", ats: 99, description: "Long-form, formal, maximum parser safety." },
 ];
