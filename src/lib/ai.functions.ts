@@ -1,17 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const MODEL = "google/gemini-3-flash-preview";
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const MODEL = "llama-3.3-70b-versatile";
 
 async function callAI(opts: {
   system: string;
   user: string;
   json?: boolean;
 }): Promise<string> {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("LOVABLE_API_KEY is not configured");
-  const res = await fetch(GATEWAY, {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) throw new Error("GROQ_API_KEY is not configured. Add it to your .env file. Get a free key at https://console.groq.com/keys");
+
+  const res = await fetch(GROQ_API_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${key}`,
@@ -23,15 +24,18 @@ async function callAI(opts: {
         { role: "system", content: opts.system },
         { role: "user", content: opts.user },
       ],
+      temperature: 0.7,
+      max_tokens: 2048,
       ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
   });
+
   if (res.status === 429) throw new Error("Rate limit hit. Please try again in a moment.");
-  if (res.status === 402) throw new Error("AI credits exhausted. Add credits in Settings → Workspace → Usage.");
   if (!res.ok) {
     const t = await res.text();
-    throw new Error(`AI error ${res.status}: ${t.slice(0, 200)}`);
+    throw new Error(`Groq API error ${res.status}: ${t.slice(0, 200)}`);
   }
+
   const data = (await res.json()) as { choices: { message: { content: string } }[] };
   return data.choices?.[0]?.message?.content ?? "";
 }
