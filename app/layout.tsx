@@ -4,6 +4,7 @@ import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const metadata: Metadata = {
   title: "ResumeBuilder",
   description:

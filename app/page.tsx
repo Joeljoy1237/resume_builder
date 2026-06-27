@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const metadata: Metadata = {
   title: "Inkwell — AI ATS Resume Builder",
   description:

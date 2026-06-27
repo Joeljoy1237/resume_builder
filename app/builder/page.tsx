@@ -21,7 +21,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { SiteHeader } from "@/components/site-header";
-import { ResumePreview } from "@/components/resume/resume-preview";
 import { ScaledPreview } from "@/components/resume/scaled-preview";
 import { ResumeForm } from "@/components/resume/resume-form";
 import { TemplatePicker } from "@/components/resume/template-picker";

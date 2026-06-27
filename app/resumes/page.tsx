@@ -28,13 +28,18 @@ export default function ResumesPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [currentId, setCurrentId] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
     setResumes(getResumes());
+    setCurrentId(getCurrentResumeId());
   }, []);
 
-  const refresh = () => setResumes(getResumes());
+  const refresh = () => {
+    setResumes(getResumes());
+    setCurrentId(getCurrentResumeId());
+  };
 
   const handleNew = () => {
     const resume = createResume("Untitled resume");
@@ -125,7 +130,7 @@ export default function ResumesPage() {
           <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {mounted &&
               resumes.map((resume) => {
-                const current = getCurrentResumeId() === resume.id;
+                const current = currentId === resume.id;
                 const isRenaming = renameId === resume.id;
                 return (
                   <div

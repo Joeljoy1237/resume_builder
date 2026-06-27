@@ -10,7 +10,7 @@ lerna-debug.log*
 design-system/
 .agent*
 skills-lock.json
-.next
+.next/**
 node_modules
 dist
 dist-ssr
