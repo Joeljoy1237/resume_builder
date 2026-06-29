@@ -1,3 +1,4 @@
+import { formatContact } from "@/lib/pdf-export";
 import type { ResumeData, TemplateId } from "@/lib/resume-types";
 
 type SectionKey =
@@ -273,7 +274,7 @@ function Heading({ title, style }: { title: string; style: TemplateStyle["headin
 export function ResumePreview({ data }: { data: ResumeData }) {
   const r = data;
   const s = STYLES[r.template] ?? STYLES.professional;
-  const contact = [r.email, r.phone, r.location, r.linkedin, r.github, r.website].filter(Boolean);
+  const contact = formatContact(r);
 
   const renderSection = (key: SectionKey) => {
     switch (key) {
@@ -425,9 +426,7 @@ export function ResumePreview({ data }: { data: ResumeData }) {
           {r.fullName || "Your Name"}
         </h1>
         {r.title && <p className="text-[11pt] mt-0.5 text-neutral-700">{r.title}</p>}
-        {contact.length > 0 && (
-          <p className="text-[9pt] mt-1 text-neutral-700">{contact.join("  |  ")}</p>
-        )}
+        {contact && <p className="text-[9pt] mt-1 text-neutral-700">{contact}</p>}
       </header>
       <div className={rule} />
 

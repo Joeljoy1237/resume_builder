@@ -1,3 +1,4 @@
+import { uid } from "./utils";
 import { emptyResume, type ResumeData } from "./resume-types";
 
 const RESUMES_KEY = "ats-resumes-v1";
@@ -8,10 +9,6 @@ export interface SavedResume {
   name: string;
   updatedAt: number;
   data: ResumeData;
-}
-
-function uid() {
-  return `${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36).slice(-4)}`;
 }
 
 function parse<T>(raw: string | null, fallback: T): T {

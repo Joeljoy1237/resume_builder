@@ -11,7 +11,6 @@ import {
   FilePlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SiteHeader } from "@/components/site-header";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const metadata: Metadata = {
@@ -27,8 +26,6 @@ export const metadata: Metadata = {
 export default function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SiteHeader />
-
       {/* Hero */}
       <section className="border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-20 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
@@ -116,7 +113,7 @@ export default function Landing() {
       </section>
 
       {/* Two paths */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16">
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
         <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
           <PathCard
             href="/upload"
@@ -136,7 +133,7 @@ export default function Landing() {
       </section>
 
       {/* Features */}
-      <section className="border-t border-border bg-secondary/30">
+      <section className="border-t border-border bg-secondary/30 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700 motion-safe:delay-150">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16">
           <h2 className="font-display text-3xl mb-8">What&apos;s inside</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -191,7 +188,7 @@ function PathCard({
   return (
     <Link
       href={href}
-      className="group block border border-border bg-card rounded-md p-6 transition-all duration-200 hover:border-foreground/60 hover:bg-secondary/60 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer"
+      className="group block border border-border bg-card rounded-md p-6 transition-all duration-200 hover:border-foreground/60 hover:bg-secondary/60 hover:shadow-sm hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer"
     >
       <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-muted-foreground">
         <span>{kicker}</span>
@@ -210,7 +207,7 @@ function PathCard({
 
 function Feature({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
   return (
-    <div className="group">
+    <div className="group transition-transform duration-200 hover:-translate-y-0.5">
       <div className="size-10 rounded-md border border-border bg-background grid place-items-center mb-3 transition-colors duration-200 group-hover:border-foreground/60 group-hover:bg-secondary/50">
         {icon}
       </div>

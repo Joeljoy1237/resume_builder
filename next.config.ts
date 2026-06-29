@@ -1,7 +1,5 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  serverExternalPackages: ["pdfjs-dist", "mammoth"],
-};
+const nextConfig: NextConfig = {};
 
 export default nextConfig;

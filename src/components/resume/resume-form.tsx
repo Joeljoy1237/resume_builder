@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useForm, FormProvider, useFormContext, Controller, useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
-import { Sparkles, Plus, X, Loader2, Lightbulb, GripVertical } from "lucide-react";
-import { useShallow } from "zustand/react/shallow";
+import { Sparkles, Plus, X, Loader2, Lightbulb, GripVertical, CheckCircle2, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -11,11 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { uid, cn } from "@/lib/utils";
 import { useResumeStore } from "@/lib/resume-store";
 import { improveText, suggestSkills } from "@/lib/ai.functions";
-import type { Experience, Education, Project } from "@/lib/resume-types";
-
-const uid = () => Math.random().toString(36).slice(2, 10);
+import type { Experience, Education, Project, ResumeData } from "@/lib/resume-types";
 
 function AIButton({
   onClick,
@@ -114,91 +113,101 @@ async function aiSkills() {
 }
 
 export function ResumeForm() {
+  const storeData = useResumeStore((s) => s.data);
+  const setStore = useResumeStore((s) => s.set);
+
+  const methods = useForm<ResumeData>({
+    defaultValues: storeData,
+  });
+
+  const { watch, reset } = methods;
+
+  // Sync from store to react-hook-form (e.g. when AI rewrite updates the store, or active resume changes)
+  useEffect(() => {
+    const currentValues = watch();
+    if (JSON.stringify(currentValues) !== JSON.stringify(storeData)) {
+      reset(storeData);
+    }
+  }, [storeData, reset, watch]);
+
+  // Sync from react-hook-form to store
+  useEffect(() => {
+    const subscription = watch((values) => {
+      const storeState = useResumeStore.getState().data;
+      if (JSON.stringify(storeState) !== JSON.stringify(values)) {
+        setStore(values as Partial<ResumeData>);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, setStore]);
+
   return (
-    <div className="space-y-10">
-      <PersonalSection />
-      <SummarySection />
-      <SkillsSection />
-      <ExperienceSection />
-      <ProjectsSection />
-      <EducationSection />
-      <ExtrasSection />
-    </div>
+    <FormProvider {...methods}>
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-10">
+        <PersonalSection />
+        <SummarySection />
+        <SkillsSection />
+        <ExperienceSection />
+        <ProjectsSection />
+        <EducationSection />
+        <ExtrasSection />
+      </form>
+    </FormProvider>
   );
 }
 
 function PersonalSection() {
-  const set = useResumeStore((s) => s.set);
-  const { fullName, title, email, phone, location, linkedin, github, website } = useResumeStore(
-    useShallow((s) => ({
-      fullName: s.data.fullName,
-      title: s.data.title,
-      email: s.data.email,
-      phone: s.data.phone,
-      location: s.data.location,
-      linkedin: s.data.linkedin,
-      github: s.data.github,
-      website: s.data.website,
-    })),
-  );
+  const { register } = useFormContext<ResumeData>();
 
   return (
     <FormSection id="personal" title="Personal Information" sub="Name, title, and contact details.">
       <div className="grid sm:grid-cols-2 gap-4">
-        <Field label="Full name">
+        <Field label="Full name" name="fullName" required>
           <Input
-            value={fullName}
-            onChange={(e) => set({ fullName: e.target.value })}
+            {...register("fullName")}
             placeholder="e.g. Jane Doe"
           />
         </Field>
-        <Field label="Role / title">
+        <Field label="Role / title" name="title" required>
           <Input
-            value={title}
-            onChange={(e) => set({ title: e.target.value })}
+            {...register("title")}
             placeholder="e.g. Senior Software Engineer"
           />
         </Field>
-        <Field label="Email">
+        <Field label="Email" name="email" required>
           <Input
             type="email"
-            value={email}
-            onChange={(e) => set({ email: e.target.value })}
+            {...register("email")}
             placeholder="e.g. jane@example.com"
           />
         </Field>
-        <Field label="Phone">
+        <Field label="Phone" name="phone" required>
           <Input
-            value={phone}
-            onChange={(e) => set({ phone: e.target.value })}
+            {...register("phone")}
             placeholder="e.g. +1 555 123 4567"
           />
         </Field>
-        <Field label="Location">
+        <Field label="Location" name="location" required>
           <Input
-            value={location}
-            onChange={(e) => set({ location: e.target.value })}
+            {...register("location")}
             placeholder="e.g. Berlin, DE"
           />
         </Field>
-        <Field label="LinkedIn">
+        <Field label="LinkedIn" name="linkedin">
           <Input
-            value={linkedin}
-            onChange={(e) => set({ linkedin: e.target.value })}
+            {...register("linkedin")}
             placeholder="e.g. linkedin.com/in/janedoe"
           />
         </Field>
-        <Field label="GitHub">
+        <Field label="GitHub" name="github">
           <Input
-            value={github}
-            onChange={(e) => set({ github: e.target.value })}
+            {...register("github")}
             placeholder="e.g. github.com/janedoe"
           />
         </Field>
-        <Field label="Website">
+        <Field label="Website" name="website">
           <Input
-            value={website}
-            onChange={(e) => set({ website: e.target.value })}
+            {...register("website")}
             placeholder="e.g. janedoe.com"
           />
         </Field>
@@ -208,8 +217,7 @@ function PersonalSection() {
 }
 
 function SummarySection() {
-  const summary = useResumeStore((s) => s.data.summary);
-  const set = useResumeStore((s) => s.set);
+  const { register } = useFormContext<ResumeData>();
   const [loading, setLoading] = useState(false);
 
   const handleImprove = async () => {
@@ -225,21 +233,19 @@ function SummarySection() {
       sub="2–3 sentences. AI can rewrite a rough draft."
       action={<AIButton onClick={handleImprove} loading={loading} />}
     >
-      <Textarea
-        rows={4}
-        value={summary}
-        onChange={(e) => set({ summary: e.target.value })}
-        placeholder="Write a rough draft — anything. AI will polish it."
-      />
+      <Field label="Summary" name="summary" required>
+        <Textarea
+          rows={4}
+          {...register("summary")}
+          placeholder="Write a rough draft — anything. AI will polish it."
+        />
+      </Field>
     </FormSection>
   );
 }
 
 function SkillsSection() {
-  const { technical, soft } = useResumeStore(
-    useShallow((s) => ({ technical: s.data.skills.technical, soft: s.data.skills.soft })),
-  );
-  const set = useResumeStore((s) => s.set);
+  const { control } = useFormContext<ResumeData>();
   const [loading, setLoading] = useState(false);
 
   const handleSuggest = async () => {
@@ -256,18 +262,30 @@ function SkillsSection() {
       action={<AIButton onClick={handleSuggest} loading={loading} label="Suggest skills" />}
     >
       <div className="space-y-4">
-        <Field label="Technical">
-          <TagsInput
-            value={technical}
-            onChange={(v) => set({ skills: { technical: v, soft } })}
-            placeholder="React, TypeScript, AWS"
+        <Field label="Technical" name="skills.technical" required>
+          <Controller
+            control={control}
+            name="skills.technical"
+            render={({ field: { value, onChange } }) => (
+              <TagsInput
+                value={value || []}
+                onChange={onChange}
+                placeholder="React, TypeScript, AWS"
+              />
+            )}
           />
         </Field>
-        <Field label="Soft">
-          <TagsInput
-            value={soft}
-            onChange={(v) => set({ skills: { technical, soft: v } })}
-            placeholder="Leadership, Communication"
+        <Field label="Soft" name="skills.soft">
+          <Controller
+            control={control}
+            name="skills.soft"
+            render={({ field: { value, onChange } }) => (
+              <TagsInput
+                value={value || []}
+                onChange={onChange}
+                placeholder="Leadership, Communication"
+              />
+            )}
           />
         </Field>
       </div>
@@ -276,31 +294,23 @@ function SkillsSection() {
 }
 
 function ExperienceSection() {
-  const experience = useResumeStore((s) => s.data.experience);
-  const set = useResumeStore((s) => s.set);
+  const { control, register } = useFormContext<ResumeData>();
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "experience",
+  });
   const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
 
   const addExp = () =>
-    set({
-      experience: [
-        ...experience,
-        {
-          id: uid(),
-          company: "",
-          role: "",
-          location: "",
-          startDate: "",
-          endDate: "",
-          bullets: [""],
-        },
-      ],
+    append({
+      id: uid(),
+      company: "",
+      role: "",
+      location: "",
+      startDate: "",
+      endDate: "",
+      bullets: [""],
     });
-  const updExp = (i: number, patch: Partial<Experience>) => {
-    const n = [...experience];
-    n[i] = { ...n[i], ...patch };
-    set({ experience: n });
-  };
-  const delExp = (i: number) => set({ experience: experience.filter((_, x) => x !== i) });
 
   const handleRewrite = async (i: number) => {
     setLoadingIndex(i);
@@ -327,50 +337,48 @@ function ExperienceSection() {
       }
     >
       <div className="space-y-5">
-        {experience.map((e, i) => (
+        {fields.map((e, i) => (
           <Card key={e.id} className="p-5 space-y-4 bg-card border-border/60">
             <div className="flex items-start gap-2">
               <GripVertical className="size-4 text-muted-foreground mt-2 shrink-0" />
               <div className="flex-1 grid sm:grid-cols-2 gap-4">
-                <Field label="Role">
-                  <Input value={e.role} onChange={(ev) => updExp(i, { role: ev.target.value })} />
+                <Field label="Role" name={`experience.${i}.role`} required>
+                  <Input {...register(`experience.${i}.role` as const)} />
                 </Field>
-                <Field label="Company">
-                  <Input
-                    value={e.company}
-                    onChange={(ev) => updExp(i, { company: ev.target.value })}
-                  />
+                <Field label="Company" name={`experience.${i}.company`} required>
+                  <Input {...register(`experience.${i}.company` as const)} />
                 </Field>
-                <Field label="Location">
-                  <Input
-                    value={e.location ?? ""}
-                    onChange={(ev) => updExp(i, { location: ev.target.value })}
-                  />
+                <Field label="Location" name={`experience.${i}.location`}>
+                  <Input {...register(`experience.${i}.location` as const)} />
                 </Field>
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="Start">
+                  <Field label="Start" name={`experience.${i}.startDate`} required>
                     <Input
-                      value={e.startDate}
-                      onChange={(ev) => updExp(i, { startDate: ev.target.value })}
+                      {...register(`experience.${i}.startDate` as const)}
                       placeholder="Jan 2022"
                     />
                   </Field>
-                  <Field label="End">
+                  <Field label="End" name={`experience.${i}.endDate`} required>
                     <Input
-                      value={e.endDate}
-                      onChange={(ev) => updExp(i, { endDate: ev.target.value })}
+                      {...register(`experience.${i}.endDate` as const)}
                       placeholder="Present"
                     />
                   </Field>
                 </div>
               </div>
             </div>
-            <Field label="Bullet points (one per line)">
-              <Textarea
-                rows={4}
-                value={e.bullets.join("\n")}
-                onChange={(ev) => updExp(i, { bullets: ev.target.value.split("\n") })}
-                placeholder="Led migration that cut p99 latency 62%..."
+            <Field label="Bullet points (one per line)" name={`experience.${i}.bullets`} required>
+              <Controller
+                control={control}
+                name={`experience.${i}.bullets`}
+                render={({ field: { value, onChange } }) => (
+                  <Textarea
+                    rows={4}
+                    value={value ? value.join("\n") : ""}
+                    onChange={(ev) => onChange(ev.target.value.split("\n"))}
+                    placeholder="Led migration that cut p99 latency 62%..."
+                  />
+                )}
               />
             </Field>
             <div className="flex items-center justify-between pt-1">
@@ -383,7 +391,7 @@ function ExperienceSection() {
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => delExp(i)}
+                onClick={() => remove(i)}
                 className="text-destructive gap-1.5 cursor-pointer transition-colors duration-200"
               >
                 <X className="size-3.5" />
@@ -392,7 +400,7 @@ function ExperienceSection() {
             </div>
           </Card>
         ))}
-        {experience.length === 0 && (
+        {fields.length === 0 && (
           <EmptyHint text="No roles yet — add your most recent first." onClick={addExp} />
         )}
       </div>
@@ -401,20 +409,15 @@ function ExperienceSection() {
 }
 
 function ProjectsSection() {
-  const projects = useResumeStore((s) => s.data.projects);
-  const set = useResumeStore((s) => s.set);
+  const { control, register } = useFormContext<ResumeData>();
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "projects",
+  });
   const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
 
   const addProj = () =>
-    set({
-      projects: [...projects, { id: uid(), name: "", link: "", description: "", tech: "" }],
-    });
-  const updProj = (i: number, patch: Partial<Project>) => {
-    const n = [...projects];
-    n[i] = { ...n[i], ...patch };
-    set({ projects: n });
-  };
-  const delProj = (i: number) => set({ projects: projects.filter((_, x) => x !== i) });
+    append({ id: uid(), name: "", link: "", description: "", tech: "" });
 
   const handleRewrite = async (i: number) => {
     setLoadingIndex(i);
@@ -441,33 +444,28 @@ function ProjectsSection() {
       }
     >
       <div className="space-y-5">
-        {projects.map((p, i) => (
+        {fields.map((p, i) => (
           <Card key={p.id} className="p-5 space-y-4 bg-card border-border/60">
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="Name">
-                <Input value={p.name} onChange={(ev) => updProj(i, { name: ev.target.value })} />
+              <Field label="Name" name={`projects.${i}.name`} required>
+                <Input {...register(`projects.${i}.name` as const)} />
               </Field>
-              <Field label="Tech">
+              <Field label="Tech" name={`projects.${i}.tech`}>
                 <Input
-                  value={p.tech ?? ""}
-                  onChange={(ev) => updProj(i, { tech: ev.target.value })}
+                  {...register(`projects.${i}.tech` as const)}
                   placeholder="React, Postgres"
                 />
               </Field>
               <div className="sm:col-span-2">
-                <Field label="Link">
-                  <Input
-                    value={p.link ?? ""}
-                    onChange={(ev) => updProj(i, { link: ev.target.value })}
-                  />
+                <Field label="Link" name={`projects.${i}.link`}>
+                  <Input {...register(`projects.${i}.link` as const)} />
                 </Field>
               </div>
             </div>
-            <Field label="Description">
+            <Field label="Description" name={`projects.${i}.description`} required>
               <Textarea
                 rows={3}
-                value={p.description}
-                onChange={(ev) => updProj(i, { description: ev.target.value })}
+                {...register(`projects.${i}.description` as const)}
                 placeholder="Built a real-time analytics pipeline..."
               />
             </Field>
@@ -481,7 +479,7 @@ function ProjectsSection() {
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => delProj(i)}
+                onClick={() => remove(i)}
                 className="text-destructive gap-1.5 cursor-pointer transition-colors duration-200"
               >
                 <X className="size-3.5" />
@@ -496,22 +494,14 @@ function ProjectsSection() {
 }
 
 function EducationSection() {
-  const education = useResumeStore((s) => s.data.education);
-  const set = useResumeStore((s) => s.set);
+  const { control, register } = useFormContext<ResumeData>();
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "education",
+  });
 
   const addEdu = () =>
-    set({
-      education: [
-        ...education,
-        { id: uid(), school: "", degree: "", field: "", startDate: "", endDate: "", details: "" },
-      ],
-    });
-  const updEdu = (i: number, patch: Partial<Education>) => {
-    const n = [...education];
-    n[i] = { ...n[i], ...patch };
-    set({ education: n });
-  };
-  const delEdu = (i: number) => set({ education: education.filter((_, x) => x !== i) });
+    append({ id: uid(), school: "", degree: "", field: "", startDate: "", endDate: "", details: "" });
 
   return (
     <FormSection
@@ -531,41 +521,31 @@ function EducationSection() {
       }
     >
       <div className="space-y-5">
-        {education.map((e, i) => (
+        {fields.map((e, i) => (
           <Card key={e.id} className="p-5 space-y-4 bg-card border-border/60">
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="School">
-                <Input value={e.school} onChange={(ev) => updEdu(i, { school: ev.target.value })} />
+              <Field label="School" name={`education.${i}.school`} required>
+                <Input {...register(`education.${i}.school` as const)} />
               </Field>
-              <Field label="Degree">
-                <Input value={e.degree} onChange={(ev) => updEdu(i, { degree: ev.target.value })} />
+              <Field label="Degree" name={`education.${i}.degree`} required>
+                <Input {...register(`education.${i}.degree` as const)} />
               </Field>
-              <Field label="Field">
-                <Input
-                  value={e.field ?? ""}
-                  onChange={(ev) => updEdu(i, { field: ev.target.value })}
-                />
+              <Field label="Field" name={`education.${i}.field`}>
+                <Input {...register(`education.${i}.field` as const)} />
               </Field>
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Start">
-                  <Input
-                    value={e.startDate}
-                    onChange={(ev) => updEdu(i, { startDate: ev.target.value })}
-                  />
+                <Field label="Start" name={`education.${i}.startDate`} required>
+                  <Input {...register(`education.${i}.startDate` as const)} />
                 </Field>
-                <Field label="End">
-                  <Input
-                    value={e.endDate}
-                    onChange={(ev) => updEdu(i, { endDate: ev.target.value })}
-                  />
+                <Field label="End" name={`education.${i}.endDate`} required>
+                  <Input {...register(`education.${i}.endDate` as const)} />
                 </Field>
               </div>
             </div>
-            <Field label="Details">
+            <Field label="Details" name={`education.${i}.details`}>
               <Textarea
                 rows={2}
-                value={e.details ?? ""}
-                onChange={(ev) => updEdu(i, { details: ev.target.value })}
+                {...register(`education.${i}.details` as const)}
                 placeholder="GPA, honors, coursework"
               />
             </Field>
@@ -574,7 +554,7 @@ function EducationSection() {
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => delEdu(i)}
+                onClick={() => remove(i)}
                 className="text-destructive gap-1.5 cursor-pointer transition-colors duration-200"
               >
                 <X className="size-3.5" />
@@ -589,39 +569,50 @@ function EducationSection() {
 }
 
 function ExtrasSection() {
-  const { certifications, achievements, languages } = useResumeStore(
-    useShallow((s) => ({
-      certifications: s.data.certifications,
-      achievements: s.data.achievements,
-      languages: s.data.languages,
-    })),
-  );
-  const set = useResumeStore((s) => s.set);
+  const { control } = useFormContext<ResumeData>();
 
   return (
     <FormSection id="extras" title="Extras" sub="Certifications, achievements, and languages.">
       <div className="space-y-4">
-        <Field label="Certifications">
-          <TagsInput
-            value={certifications}
-            onChange={(v) => set({ certifications: v })}
-            placeholder="AWS Solutions Architect"
+        <Field label="Certifications" name="certifications">
+          <Controller
+            control={control}
+            name="certifications"
+            render={({ field: { value, onChange } }) => (
+              <TagsInput
+                value={value || []}
+                onChange={onChange}
+                placeholder="AWS Solutions Architect"
+              />
+            )}
           />
         </Field>
         <Separator />
-        <Field label="Achievements">
-          <TagsInput
-            value={achievements}
-            onChange={(v) => set({ achievements: v })}
-            placeholder="Reduced infra cost by 40%"
+        <Field label="Achievements" name="achievements">
+          <Controller
+            control={control}
+            name="achievements"
+            render={({ field: { value, onChange } }) => (
+              <TagsInput
+                value={value || []}
+                onChange={onChange}
+                placeholder="Reduced infra cost by 40%"
+              />
+            )}
           />
         </Field>
         <Separator />
-        <Field label="Languages">
-          <TagsInput
-            value={languages}
-            onChange={(v) => set({ languages: v })}
-            placeholder="English (native), German (B2)"
+        <Field label="Languages" name="languages">
+          <Controller
+            control={control}
+            name="languages"
+            render={({ field: { value, onChange } }) => (
+              <TagsInput
+                value={value || []}
+                onChange={onChange}
+                placeholder="English (native), German (B2)"
+              />
+            )}
           />
         </Field>
       </div>
@@ -629,13 +620,55 @@ function ExtrasSection() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  name,
+  required,
+  children,
+}: {
+  label: string;
+  name?: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  const { watch } = useFormContext();
+  const value = name ? watch(name) : undefined;
+
+  let isEmptyRequired = false;
+  if (required && name) {
+    if (value === undefined || value === null) {
+      isEmptyRequired = true;
+    } else if (typeof value === "string") {
+      isEmptyRequired = value.trim() === "";
+    } else if (Array.isArray(value)) {
+      isEmptyRequired = value.length === 0 || !value.some((v) => typeof v === "string" ? v.trim() !== "" : !!v);
+    }
+  }
+
   return (
-    <div className="space-y-1.5">
-      <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-        {label}
+    <div className="space-y-1.5 group w-full">
+      <Label className={cn(
+        "flex items-center justify-between gap-1 select-none text-xs font-medium uppercase tracking-wider transition-colors duration-200",
+        isEmptyRequired ? "text-amber-500/90" : "text-muted-foreground"
+      )}>
+        <span className="flex items-center gap-1">
+          {label}
+          {required && (
+            <span className={cn("font-bold transition-colors duration-200", isEmptyRequired ? "text-amber-500" : "text-destructive")} title="Required">*</span>
+          )}
+        </span>
+        {isEmptyRequired && (
+          <span className="text-[10px] text-amber-500/80 normal-case font-normal select-none animate-pulse">
+            Required
+          </span>
+        )}
       </Label>
-      {children}
+      <div className={cn(
+        "rounded-md transition-all duration-200",
+        isEmptyRequired && "[&>input]:border-amber-500/40 [&>textarea]:border-amber-500/40 [&>input]:bg-amber-500/[0.01] [&>textarea]:bg-amber-500/[0.01] focus-within:ring-2 focus-within:ring-amber-500/20"
+      )}>
+        {children}
+      </div>
     </div>
   );
 }

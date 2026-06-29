@@ -31,14 +31,12 @@ async function extractFromDocx(file: File): Promise<string> {
 }
 
 /* Convert resume data back to plain text for scoring */
+import { formatContact } from "./pdf-export";
 import type { ResumeData } from "./resume-types";
 export function resumeToText(r: ResumeData): string {
   const lines: string[] = [];
-  lines.push(
-    r.fullName,
-    r.title,
-    [r.email, r.phone, r.location, r.linkedin, r.github, r.website].filter(Boolean).join(" | "),
-  );
+  lines.push(r.fullName, r.title, formatContact(r).replace(/ {2}\| {2}/g, " | "));
+
   if (r.summary) lines.push("\nSUMMARY", r.summary);
   if (r.skills.technical.length || r.skills.soft.length) {
     lines.push("\nSKILLS", [...r.skills.technical, ...r.skills.soft].join(", "));

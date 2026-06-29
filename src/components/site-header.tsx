@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 const nav = [
   { href: "/resumes", label: "Resumes", icon: Library },
   { href: "/upload", label: "Upload", icon: Upload },
-  { href: "/builder", label: "Builder", icon: PenTool },
 ];
 
 export function SiteHeader() {
@@ -28,13 +27,13 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="fixed top-0 left-0 right-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2 motion-safe:duration-500">
       <div className="mx-auto max-w-[1600px] px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
         <Link
           href="/"
           className="flex items-center gap-2 group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
-          <div className="size-8 grid place-items-center bg-primary text-primary-foreground rounded-md shadow-sm">
+          <div className="size-8 grid place-items-center bg-primary text-primary-foreground rounded-md shadow-sm transition-transform duration-200 group-hover:scale-105">
             <FileText className="size-4" />
           </div>
           <span className="font-display text-xl tracking-tight">
@@ -51,10 +50,10 @@ export function SiteHeader() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   active
                     ? "bg-secondary font-medium text-foreground"
-                    : "text-muted-foreground hover:text-foreground",
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50",
                 )}
               >
                 <Icon className="size-3.5" />
@@ -86,7 +85,7 @@ export function SiteHeader() {
       </div>
 
       {open && (
-        <div className="md:hidden border-t border-border px-4 py-3 space-y-1 bg-background">
+        <div className="md:hidden border-t border-border px-4 py-3 space-y-1 bg-background motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 motion-safe:duration-200">
           {nav.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
